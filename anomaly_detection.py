@@ -19,7 +19,7 @@ warnings.filterwarnings('ignore', category=ConstantInputWarning)
 
 # Constants
 ALPHA = 0.05 # Significance level for ParCorr
-PREFIX = "C:\\Users\\User\\tigramite\\tigramite\\tutorials\\causal_discovery\\" #path to this folder
+PREFIX = "C:\\Users\\User\\tigramite\\tigramite\\tutorials\\causal_discovery\\" #path to model and data folder
 
 
 
@@ -47,7 +47,7 @@ def run_pcmci(data, delay, link_assumptions=None):
     return results
 
 
-for TASK in ["swat", "pepper"]:
+for TASK in ["swat"]:
     end = 0
     start = 0
     has_ends = False

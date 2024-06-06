@@ -17,7 +17,7 @@ warnings.filterwarnings('ignore', category=ConstantInputWarning)
 # Constants
 MAX_FREQ_COMPONENTS = 5
 ALPHA = 0.05 # Significance level for ParCorr
-PREFIX = "C:\\Users\\User\\tigramite\\tigramite\\tutorials\\causal_discovery\\" #path to this folder
+PREFIX = "C:\\Users\\User\\tigramite\\tigramite\\tutorials\\causal_discovery\\" #path to data folder
 STEP = 20
 
 # Loads a specified CSV file, preprocesses it by selecting a subset of rows, removing near constant and NaN-only columns, formatting and indexing the timestamp, and eliminating unnecessary columns, returning the cleaned data in a pandas dataframe.
@@ -57,7 +57,7 @@ def run_pcmci(data, delay):
 
 
 def main():
-    for task in ["swat", "pepper"]:
+    for task in ["swat"]:
         print(task)
         #modify paths to dataset folders
         if task == 'swat':
