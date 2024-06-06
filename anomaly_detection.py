@@ -208,6 +208,7 @@ for TASK in ["swat"]:
                     var = np.unique(indices[1,:])[i]
                     var_indices = [indices[:,k] for k in range(np.shape(indices)[1]) if indices[1,k] == var]
                     var_indices.sort(key= lambda a : a[-1])
+                    max_delay = var_indices[-1][2]
                     start_time = time.time()
                     stack_list = []
                     for el in var_indices:
