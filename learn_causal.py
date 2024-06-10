@@ -15,10 +15,10 @@ from scipy.stats import ConstantInputWarning
 warnings.filterwarnings('ignore', category=ConstantInputWarning)
 
 # Constants
-MAX_FREQ_COMPONENTS = 5
+MAX_FREQ_COMPONENTS = 5 # Number of main frequency components to consider
 ALPHA = 0.05 # Significance level for ParCorr
 PREFIX = "C:\\Users\\User\\tigramite\\tigramite\\tutorials\\causal_discovery\\" #path to data folder
-STEP = 20
+TRAINING_FRAC = 0.7 # Fraction of the dataset to use for training
 
 # Loads a specified CSV file, preprocesses it by selecting a subset of rows, removing near constant and NaN-only columns, formatting and indexing the timestamp, and eliminating unnecessary columns, returning the cleaned data in a pandas dataframe.
 def read_preprocess_data(path, task):
@@ -57,7 +57,7 @@ def run_pcmci(data, delay):
 
 
 def main():
-    for task in ["swat"]:
+    for task in ["swat", "pepper"]:
         print(task)
         #modify paths to dataset folders
         if task == 'swat':
@@ -66,7 +66,7 @@ def main():
             normal_df, ts = read_preprocess_data(PREFIX+"pepper_csv/normal.csv", task)
 
         columns = normal_df.columns
-        normal_data = pp.DataFrame(np.nan_to_num(normal_df.values))
+        normal_data = pp.DataFrame(np.nan_to_num(normal_df.values[:int(TRAINING_FRAC*np.shape(normal_df.values)[0]), :]))
 
         #compute main frequencies
         frequencies = []
@@ -102,7 +102,7 @@ def main():
         start = time.time()
         normal_links = run_pcmci(nonconst_data, delay)
         elapsed = time.time() - start
-        np.savez(PREFIX+task+"_normal", val_matrix=normal_links["val_matrix"], p_matrix=normal_links["p_matrix"], var=columns, subsample=max(1, int(np.floor(1/10/max_freq))), nonconst=nonconst, time=elapsed)
+        np.savez(PREFIX+task+"_normal_07", val_matrix=normal_links["val_matrix"], p_matrix=normal_links["p_matrix"], var=columns, subsample=max(1, int(np.floor(1/10/max_freq))), nonconst=nonconst, time=elapsed)
 
 
       

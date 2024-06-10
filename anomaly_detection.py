@@ -47,7 +47,8 @@ def run_pcmci(data, delay, link_assumptions=None):
     return results
 
 
-for TASK in ["swat"]:
+for TASK in ["pepper", "swat"]:
+    print(TASK)
     end = 0
     start = 0
     has_ends = False
@@ -56,7 +57,7 @@ for TASK in ["swat"]:
     tneg = []
     fneg = []
 
-    causal_models = [f for f in os.listdir(PREFIX) if "npz" in f and TASK+"_normal" in f]
+    causal_models = [f for f in os.listdir(PREFIX) if "npz" in f and TASK+"_normal_07" in f]
     f = np.load(PREFIX+causal_models[0], allow_pickle=True)
     val_matrix = f["val_matrix"]
     p_matrix = f["p_matrix"]
