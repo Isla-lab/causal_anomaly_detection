@@ -19,6 +19,7 @@ warnings.filterwarnings('ignore', category=ConstantInputWarning)
 
 # Constants
 ALPHA = 0.05 # Significance level for ParCorr
+TRAINING_FRAC = 0.7 # Fraction of the dataset to use for training
 PREFIX = "C:\\Users\\User\\tigramite\\tigramite\\tutorials\\causal_discovery\\" #path to model and data folder
 
 
@@ -136,9 +137,12 @@ for TASK in ["pepper", "swat"]:
     #PLOT CAUSAL GRAPH
     
     #save normal coeffs
-    normal_data = normal_df.values
+    normal_data = normal_df.values[:int(TRAINING_FRAC*np.shape(normal_df.values)[0]), :]
     normal_data = normal_data[::subsample, nonconst]
     normal_data = np.nan_to_num(normal_data)
+    normal_data_full = normal_df.values
+    normal_data_full = normal_data_full[::subsample, nonconst]
+    normal_data_full = np.nan_to_num(normal_data_full)
     indices = np.array(np.where(normal_matrix != 0))
     fine_coeffs = dict()
     for var in np.unique(indices[1,:]):
@@ -156,7 +160,7 @@ for TASK in ["pepper", "swat"]:
     #NORMAL OUAD
     #compute online coeffs
     err = dict()
-    max_time = np.shape(normal_data)[0] - np.shape(normal_matrix)[2]
+    max_time = np.shape(normal_data_full)[0] - np.shape(normal_matrix)[2]
     norm_agg = np.zeros((max_time, len(np.unique(indices[1,:]))))
     for j in range(0, max_time):
         for i in range(len(np.unique(indices[1,:]))):
@@ -166,9 +170,9 @@ for TASK in ["pepper", "swat"]:
             stack_list = []
             max_delay = var_indices[-1][2]
             for el in var_indices:
-                stack_list.append(normal_data[max_delay-el[2] : j+np.shape(normal_matrix)[2]-el[2], el[0]])
+                stack_list.append(normal_data_full[max_delay-el[2] : j+np.shape(normal_matrix)[2]-el[2], el[0]])
             stack_list.append(np.ones(j+np.shape(normal_matrix)[2]-max_delay))
-            coeffs = np.linalg.lstsq(np.column_stack(stack_list), normal_data[max_delay : j+np.shape(normal_matrix)[2], var])[0][:-1]
+            coeffs = np.linalg.lstsq(np.column_stack(stack_list), normal_data_full[max_delay : j+np.shape(normal_matrix)[2], var])[0][:-1]
             if var not in err.keys():
                 err[var] = np.zeros((max_time, len(var_indices)))
             err[var][j, :] = (coeffs - fine_coeffs[var])
