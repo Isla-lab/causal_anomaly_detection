@@ -48,7 +48,7 @@ def run_pcmci(data, delay, link_assumptions=None):
     return results
 
 
-for TASK in ["pepper", "swat"]:
+for TASK in ["swat"]:
     print(TASK)
     end = 0
     start = 0
@@ -76,7 +76,7 @@ for TASK in ["pepper", "swat"]:
         gt = attack_df['Normal/Attack']
         attack_df.drop(columns=['Normal/Attack'], inplace=True)
         timeranges=[['28/12/2015 01:10:10 PM', '28/12/2015 01:26:13 PM']] 
-        attack_dfs = [attack_df]
+        attack_dfs = [attack_df] #FIX THIS REPETITION AND DIRECTLY SPLIT TIME SERIES HERE
         # print("DPIT301, tank 401 (8)")
         timeranges.append(['31/12/2015 01:45:19 AM', '31/12/2015 11:15:27 AM']) 
         attack_dfs.append(attack_df)
@@ -178,28 +178,21 @@ for TASK in ["pepper", "swat"]:
             err[var][j, :] = (coeffs - fine_coeffs[var])
             norm_agg[j,i] = np.linalg.norm(err[var][j, :])
 
-    #sort by coeff error norm
-    norms = np.linalg.norm(norm_agg[:,:], axis=0)
-    norm_index_agg = np.argsort(norms)[::-1]
     indices_error = []
-    for i in norm_index_agg:
+    for i in range(np.shape(norm_agg)[1]):
         var = np.unique(indices[1,:])[i]
         var_indices = [indices[:,k] for k in range(np.shape(indices)[1]) if indices[1,k] == var]
-        norms = np.linalg.norm(err[var][:,:], axis=0)
-        norm_index = np.argsort(norms)[::-1]
-        #raise alarms
-        for j in norm_index:
-            thresh = np.linalg.norm(err[var][:,j])# / np.shape(err[var])[0]
-            if np.linalg.norm(err[var][:,j]) > thresh:
-                indices_error += list(np.where(abs(err[var][:,j]) > thresh)[0])
-                dep_vars[f["var"][nonconst][var]].append(f["var"][nonconst][var_indices[j][0]])
-            else:
-                break
+        for j in range(np.shape(err[var])[1]):
+            thresh = np.linalg.norm(err[var][:len(normal_data),j])
+            indices_error += list(np.where(abs(err[var][:,j]) > thresh)[0])
 
     fpos.append(len(np.unique(indices_error)))
 
     #ATTACK OUAD
     for q in range(len(attack_dfs)):
+        print("ANOMALY ", q)
+        dep_vars = dict()
+        dep_vars_value = dict()
         #compute online coeffs
         if (q==0 and TASK=="swat") or TASK != "swat": #swat only has one data log: compute only once
             attack_data = attack_dfs[q].values
@@ -222,7 +215,7 @@ for TASK in ["pepper", "swat"]:
                     coeffs = np.linalg.lstsq(np.column_stack(stack_list), attack_data[max_delay : j+np.shape(normal_matrix)[2], var])[0][:-1]
                     if var not in err_attack.keys():
                         err_attack[var] = np.zeros((max_time, len(var_indices)))
-                    err_attack[var][j, :] = (coeffs - fine_coeffs[var]) 
+                    err_attack[var][j, :] = (coeffs - fine_coeffs[var])
                     norm_agg[j,i] = np.linalg.norm(err_attack[var][j, :])
 
         start_index = 0
@@ -230,34 +223,42 @@ for TASK in ["pepper", "swat"]:
         if has_ends: #to isolate different anomalies in the unique log of swat
             start_index = starts[q]/subsample
             end_index = ends[q]/subsample
-        #sort by coeff error norm
-        norms = np.linalg.norm(norm_agg[int(start_index):int(end_index),:], axis=0)
-        norm_index_agg = np.argsort(norms)[::-1]
         main_vars = [] #print this to identify broken causal children
-        dep_vars = dict() #print this to identify broken causal parents
         indices_error = []
-        for i in norm_index_agg:
+        for i in range(np.shape(norm_agg)[1]):
             var = np.unique(indices[1,:])[i]
             var_indices = [indices[:,k] for k in range(np.shape(indices)[1]) if indices[1,k] == var]
             main_vars.append(f["var"][nonconst][var])
-            norms = np.linalg.norm(err_attack[var][int(start_index):int(end_index),:], axis=0)
-            norm_index = np.argsort(norms)[::-1]
-            dep_vars[f["var"][nonconst][var]] = []
+            if f["var"][nonconst][var] not in dep_vars.keys():
+                dep_vars[f["var"][nonconst][var]] = []
+                dep_vars_value[f["var"][nonconst][var]] = []
             #raise alarm
-            for j in norm_index:
-                thresh = np.linalg.norm(err[var][:,j])# / np.shape(err[var])[0]
-                if np.linalg.norm(err_attack[var][int(start_index):int(end_index),j]) > thresh:
-                    indices_error += list(np.where(abs(err_attack[var][int(start_index):int(end_index),j]) > thresh)[0])
-                    dep_vars[f["var"][nonconst][var]].append(f["var"][nonconst][var_indices[j][0]])
-                else:
-                    break
-            
+            for j in range(np.shape(err_attack[var])[1]):
+                thresh = np.linalg.norm(err[var][:len(normal_data),j])
+                indices_error += list(np.where(abs(err_attack[var][int(start_index):int(end_index),j]) > thresh)[0])
+                dep_vars[f["var"][nonconst][var]].append(f["var"][nonconst][var_indices[j][0]])
+                dep_vars_value[f["var"][nonconst][var]].append(norm_agg[int(start_index):int(end_index),i])
             
         tpos.append(len(np.unique(indices_error)))
-        if has_ends:
-            fneg.append(np.shape(err_attack[var][int(start_index):int(end_index),j])[0] - tpos[-1])
-        else:
-            fneg.append(np.shape(err_attack[var][int(start_index):int(end_index),j])[0] - tpos[-1])
+        fneg.append(np.shape(err_attack[var][int(start_index):int(end_index),j])[0] - tpos[-1])    
+
+
+        # MOST ANOMALOUS VARIABLES
+        # dep_vars_value_aggregates = dict()
+        # for k in dep_vars_value.keys():
+        #     if dep_vars_value[k] != []:
+        #         dep_vars_value_aggregates[k] = np.linalg.norm(np.array(dep_vars_value[k]))
+        # # sort by aggregated error norm
+        # dep_vars_value_aggregates = dict(sorted(dep_vars_value_aggregates.items(), key=lambda item: item[1], reverse=True))
+
+        # dep_vars_keys = list(dep_vars_value_aggregates.keys())
+        # for var_idx in range(len(dep_vars_keys)):
+        #     if var_idx > 0.1*len(dep_vars_keys):
+        #         break
+        #     if len(dep_vars[dep_vars_keys[var_idx]]) > 0:
+        #         print("AGGREGATE VALUE ", dep_vars_value_aggregates[dep_vars_keys[var_idx]])
+        #         print(dep_vars_keys[var_idx])
+        # print("===========================")
 
     print(TASK)
     print("PRECISION")
@@ -266,3 +267,4 @@ for TASK in ["pepper", "swat"]:
     print(np.sum(tpos) / (np.sum(tpos)+np.sum(fneg)))
     print("F1")
     print(2 * np.sum(tpos) / (2*np.sum(tpos)+np.sum(fneg)+np.sum(fpos)))
+
