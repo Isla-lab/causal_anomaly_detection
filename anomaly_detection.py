@@ -244,21 +244,22 @@ for TASK in ["swat"]:
 
 
         # MOST ANOMALOUS VARIABLES
-        # dep_vars_value_aggregates = dict()
-        # for k in dep_vars_value.keys():
-        #     if dep_vars_value[k] != []:
-        #         dep_vars_value_aggregates[k] = np.linalg.norm(np.array(dep_vars_value[k]))
-        # # sort by aggregated error norm
-        # dep_vars_value_aggregates = dict(sorted(dep_vars_value_aggregates.items(), key=lambda item: item[1], reverse=True))
+        dep_vars_value_aggregates = dict()
+        for k in dep_vars_value.keys():
+            if dep_vars_value[k] != []:
+                dep_vars_value_aggregates[k] = np.linalg.norm(np.array(dep_vars_value[k]))
+        # sort by aggregated error norm
+        dep_vars_value_aggregates = dict(sorted(dep_vars_value_aggregates.items(), key=lambda item: item[1], reverse=True))
 
-        # dep_vars_keys = list(dep_vars_value_aggregates.keys())
-        # for var_idx in range(len(dep_vars_keys)):
-        #     if var_idx > 0.1*len(dep_vars_keys):
-        #         break
-        #     if len(dep_vars[dep_vars_keys[var_idx]]) > 0:
-        #         print("AGGREGATE VALUE ", dep_vars_value_aggregates[dep_vars_keys[var_idx]])
-        #         print(dep_vars_keys[var_idx])
-        # print("===========================")
+        dep_vars_keys = list(dep_vars_value_aggregates.keys())
+        for var_idx in range(len(dep_vars_keys)):
+            if var_idx > 0.1*len(dep_vars_keys):
+                break
+            if len(dep_vars[dep_vars_keys[var_idx]]) > 0:
+                print("AGGREGATE ERROR ", dep_vars_value_aggregates[dep_vars_keys[var_idx]])
+                print(dep_vars_keys[var_idx])
+                # print("DEP VARS ", dep_vars[dep_vars_keys[var_idx]])
+        print("===========================")
 
     print(TASK)
     print("PRECISION")
